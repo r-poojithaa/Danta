@@ -49,7 +49,7 @@ export default function Login() {
     if (err) {
       setError(err.message)
     } else {
-      setError('Success! Check your email for the reset link.')
+      setError('Success! If an account exists for this email, you will receive a reset link shortly.')
     }
   }
 
