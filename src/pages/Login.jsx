@@ -11,7 +11,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
-  const { signIn, signUp } = useAuth()
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const { signIn, signUp, resetPassword } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -39,6 +40,31 @@ export default function Login() {
     }
   }
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const { error: err } = await resetPassword(email)
+    setLoading(false)
+    if (err) {
+      setError(err.message)
+    } else {
+      setError('Success! Check your email for the reset link.')
+    }
+  }
+
+  const getTitle = () => {
+    if (isForgotPassword) return 'Reset password'
+    if (isSignUp) return 'Create account'
+    return 'Welcome back'
+  }
+
+  const getSubtitle = () => {
+    if (isForgotPassword) return 'Enter your email to receive a reset link'
+    if (isSignUp) return 'Sign up for a clinical account'
+    return 'Sign in to your clinical account'
+  }
+
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-5 relative overflow-hidden bg-surface">
       {/* Background gradient orbs */}
@@ -58,10 +84,10 @@ export default function Login() {
         {/* Card */}
         <div className="glass rounded-3xl p-7 shadow-2xl">
           <h2 className="text-xl font-bold text-white mb-1">
-            {isSignUp ? 'Create account' : 'Welcome back'}
+            {getTitle()}
           </h2>
           <p className="text-slate-400 text-sm mb-6">
-            {isSignUp ? 'Sign up for a clinical account' : 'Sign in to your clinical account'}
+            {getSubtitle()}
           </p>
 
           {error && (
@@ -71,7 +97,7 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={isForgotPassword ? handleResetPassword : handleSubmit} className="flex flex-col gap-4">
             {/* Email */}
             <div>
               <label className="label">Email Address</label>
@@ -90,33 +116,35 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label className="label">Password</label>
-              <div className="relative">
-                <Lock size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  id="input-password"
-                  type={showPw ? 'text' : 'password'}
-                  className="input-field pl-10 pr-11"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoComplete={isSignUp ? "new-password" : "current-password"}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-                >
-                  {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
+            {/* Password - Only show if NOT in Forgot Password mode */}
+            {!isForgotPassword && (
+              <div>
+                <label className="label">Password</label>
+                <div className="relative">
+                  <Lock size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    id="input-password"
+                    type={showPw ? 'text' : 'password'}
+                    className="input-field pl-10 pr-11"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                  >
+                    {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Remember + Forgot */}
-            {!isSignUp && (
+            {/* Remember + Forgot - Only show in Sign In mode */}
+            {!isSignUp && !isForgotPassword && (
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -127,7 +155,11 @@ export default function Login() {
                   />
                   <span className="text-sm text-slate-400">Remember me</span>
                 </label>
-                <button type="button" className="text-sm text-primary hover:text-primary-light transition-colors">
+                <button 
+                  type="button" 
+                  onClick={() => { setIsForgotPassword(true); setError(''); }}
+                  className="text-sm text-primary hover:text-primary-light transition-colors"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -142,22 +174,35 @@ export default function Login() {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {isSignUp ? 'Creating account…' : 'Signing in…'}
+                  {isForgotPassword ? 'Sending link…' : (isSignUp ? 'Creating account…' : 'Signing in…')}
                 </>
-              ) : isSignUp ? 'Sign Up' : 'Sign In'}
+              ) : (
+                isForgotPassword ? 'Send Reset Link' : (isSignUp ? 'Sign Up' : 'Sign In')
+              )}
             </button>
           </form>
 
           <div className="mt-5 text-center text-sm">
-            <span className="text-slate-400">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-            </span>{' '}
-            <button
-              onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-              className="text-primary hover:text-primary-light font-medium transition-colors"
-            >
-              {isSignUp ? 'Sign in' : 'Sign up'}
-            </button>
+            {isForgotPassword ? (
+              <button
+                onClick={() => { setIsForgotPassword(false); setError(''); }}
+                className="text-primary hover:text-primary-light font-medium transition-colors"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <>
+                <span className="text-slate-400">
+                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                </span>{' '}
+                <button
+                  onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
+                  className="text-primary hover:text-primary-light font-medium transition-colors"
+                >
+                  {isSignUp ? 'Sign in' : 'Sign up'}
+                </button>
+              </>
+            )}
           </div>
         </div>
 

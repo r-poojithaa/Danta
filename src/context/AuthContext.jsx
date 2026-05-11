@@ -36,8 +36,13 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
+  const resetPassword = async (email) => {
+    const { data, error } = await auth.resetPassword(email)
+    return { data, error }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )
